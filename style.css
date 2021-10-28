@@ -15,6 +15,6 @@ body {
 }
 
 .content {
-    box-sizing: content-box;
-    float: left;
-  }
+  box-sizing: content-box;
+  float: left;
+}
