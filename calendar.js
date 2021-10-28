@@ -1,3 +1,25 @@
+const dataToSave = [];
+let db;
+let nombreEvento;
+let requestDB = window.indexedDB.open("DayDatabase", 1);
+requestDB.onerror = function (event) {
+  alert(`Que no hay database, que te calles la boca bobo`);
+};
+
+requestDB.onsuccess = () => {
+  db = requestDB.result;
+  // const _request = requestDataDB(currentYear, currentMonth);
+};
+
+requestDB.onupgradeneeded = function (event) {
+  const _db = requestDB.result;
+
+  const objectStore = _db.createObjectStore("eventsOnADay", { autoIncrement: true });
+
+  objectStore.createIndex("month", "month", { unique: false });
+  objectStore.createIndex("year", "year", { unique: false });
+};
+
 const today = new Date();
 const presentDay = today.getDate();
 const presentMonth = today.getMonth();
@@ -208,6 +230,71 @@ const createEventEntry = (element) => {
       return new bootstrap.Popover(popoverTriggerEl);
     });
   }
+};
+
+const addEvent = (month, year, day, name, start, end, description) => {
+  return db
+    .transaction(["eventsOnADay"], "readwrite")
+    .objectStore("eventsOnADay")
+    .add({ month, year, day, name, start, end, description });
+};
+
+const submitEvent = () => {
+  //Get data from the Input
+
+  const dayClicked = document.querySelector(`.popover-active`);
+  const eventName = document.querySelector(`.event-name`);
+  const eventStart = document.querySelector(`.event-start`);
+  const eventEnd = document.querySelector(`.event-end`);
+  const eventDescription = document.querySelector(`.event-description`);
+
+  const request = addEvent(
+    mn,
+    currentYear,
+    parseInt(dayClicked.id),
+    eventName.value,
+    eventStart.value,
+    eventEnd.value,
+    eventDescription.value
+  );
+
+  const popoverActivo = document.querySelector(`.popover`);
+  const popover = bootstrap.Popover.getInstance(popoverActivo);
+  popover.hide();
+
+  // alert(`evento creado`);
+};
+
+const requestDataDB = (currentYear, currentMonth) => {
+  const _req = db.transaction(["eventsOnADay"], "readwrite").objectStore("eventsOnADay").getAll();
+
+  _req.onsuccess = function (event) {
+    const arrayResult = _req.result;
+    console.log(arrayResult);
+
+    const mnth = arrayResult.filter(({ month }) => month === currentMonth + 1);
+    const evnts = mnth.filter(({ year }) => year === currentYear);
+    const mnthBefore = arrayResult.filter(() => {});
+    const evntsBefore = mnthBefore.filter(({ year }) => year === currentYear);
+
+    console.log(mnth);
+    console.log(mnthBefore);
+    console.log(evntsBefore);
+    for (i in evntsBefore) {
+      const { month: elmesantes, day: eldiaantes, name: elnombreantes } = evntsBefore[i];
+      console.log(elmesantes, eldiaantes, elnombreantes);
+      const coge = document.getElementById(`${eldiaantes}-${elmesantes}`);
+      nombreEvento = elnombreantes;
+      createEventEntry(coge);
+    }
+    for (i in evnts) {
+      const { month: elmes, day: eldia, name: elnombre } = evnts[i];
+      console.log(elmes, eldia, elnombre);
+      const coge = document.getElementById(`${eldia}-${elmes - 1}`);
+      nombreEvento = elnombre;
+      createEventEntry(coge);
+    }
+  };
 };
 
 (() => {
