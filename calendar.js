@@ -135,18 +135,78 @@ const renderCalendar = () => {
 
       if (initDate.getMonth() == currentMonth) {
         col.setAttribute("class", "col  day-col text-center");
+        createEvent(col);
       } else {
         col.setAttribute("class", "col day-col text-muted text-center text-decoration-underline");
+        createEvent(col);
       }
 
       if (initDate.getDate() == presentDay && initDate.getMonth() == presentMonth) {
         col.setAttribute("class", "col day-col text-center bg-primary");
+        createEvent(col);
       }
 
       initDate.setDate(initDate.getDate() + 1);
 
       row.appendChild(col);
+      col.addEventListener(`click`, (e) => {
+        const clicked = e.target;
+        console.log("este es el día que has clickeado", clicked.id);
+        if (clicked.id !== "") {
+          let monthOnClick = clicked.id.split("-");
+          mn = parseInt(monthOnClick[1]) + 1;
+        }
+        createEventEntry(clicked);
+      });
     }
+  }
+};
+
+const createEvent = (element) => {
+  const parent = document.createElement(`div`);
+  parent.setAttribute(`class`, `list-group`);
+  parent.setAttribute(`id`, `list-group`);
+  element.appendChild(parent);
+};
+
+const createEventEntry = (element) => {
+  const parent = element.childNodes[1];
+  if (parent != null) {
+    const popDiv = document.createElement(`div`);
+    popDiv.setAttribute(`class`, `event-button bg-primary m-1`);
+    popDiv.innerHTML = "AAAA";
+    new bootstrap.Popover(popDiv, {
+      html: true,
+      title: `Create new event`,
+      sanitize: false,
+      placement: `right`,
+      content: `<div class="popover-active form-group" id="${element.querySelector(`span`).id}">
+      <div class="input-group p-1">
+      <span class="input-group-text">Event name</span>  
+      <input  type="text" class="event-name form-control" placeholder="Event name" aria-label="Event name" aria-describedby="event-name">
+      </div>
+      <div class ="input-group p-1 ps-5">
+        <span class="input-group-text" id="start-time">From</span>  
+        <input class="event-start" type="time" aria-label="Start time" aria-describedby="start-time">
+        <span class="input-group-text" id="end-time">To</span>  
+        <input class="event-end" type="time" aria-label="End time" aria-describedby="end-time"> 
+      </div>
+      <div class="input-group p-1">
+      <span class="input-group-text" id="event-descr">Event description</span>  
+      <textarea  type="text" class="event-description form-control" placeholder="Event description" aria-label="Event description" aria-describedby="event-descr"></textarea>
+      </div>
+      <div class="d-md-flex justify-content-md-end">
+      <button class="btn btn-outline-secondary" type="submit" id="confirm-button" onclick="submitEvent()">Create</button>
+      </div>
+      
+      </div>`,
+    });
+
+    parent.appendChild(popDiv);
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+      return new bootstrap.Popover(popoverTriggerEl);
+    });
   }
 };
 
