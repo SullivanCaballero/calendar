@@ -1,4 +1,9 @@
+//Puedes clicar en un día, crear un evento con título, hora de empezar y de acabar y descripción.
+//En el calendario, en el cuadrado del día se muestran los diferentes eventos que puedan haber en ese día y el formato: Título del evento y hora de empezar. (Input para escribir, formularios, relacionar nodo html con datos)
+//Crear persistencia (F5 => datos guardados y que no se pierdan)-> HINT: localStorage o indexedDB.
+
 const dataToSave = [];
+let canRequest = false;
 let db;
 let nombreEvento;
 let requestDB = window.indexedDB.open("DayDatabase", 1);
@@ -19,6 +24,8 @@ requestDB.onupgradeneeded = function (event) {
   objectStore.createIndex("month", "month", { unique: false });
   objectStore.createIndex("year", "year", { unique: false });
 };
+
+//Comprobar los datos guardados
 
 const today = new Date();
 const presentDay = today.getDate();
@@ -65,13 +72,18 @@ const onSelectMonth = (monthName, monthIndex) => {
   currentMonth = monthIndex;
 
   renderCalendar();
+  if (canRequest) {
+    requestDataDB(currentYear, currentMonth);
+  }
 };
 
 const onSelectYear = (year) => {
   currentYear = year;
   yearCol.innerText = `${currentYear}`;
-
   renderCalendar();
+  if (canRequest) {
+    requestDataDB(currentYear, currentMonth);
+  }
 };
 
 const addMonths = () => {
@@ -178,10 +190,18 @@ const renderCalendar = () => {
           let monthOnClick = clicked.id.split("-");
           mn = parseInt(monthOnClick[1]) + 1;
         }
-        createEventEntry(clicked);
+        if (mn - 1 === currentMonth) {
+          createEventEntry(clicked);
+        }
       });
     }
   }
+
+  requestDB.onsuccess = (e) => {
+    db = e.target.result;
+    requestDataDB(currentYear, currentMonth);
+    canRequest = true;
+  };
 };
 
 const createEvent = (element) => {
@@ -196,35 +216,36 @@ const createEventEntry = (element) => {
   if (parent != null) {
     const popDiv = document.createElement(`div`);
     popDiv.setAttribute(`class`, `event-button bg-primary m-1`);
-    popDiv.innerHTML = "AAAA";
+    popDiv.innerHTML = nombreEvento;
     new bootstrap.Popover(popDiv, {
       html: true,
       title: `Create new event`,
       sanitize: false,
       placement: `right`,
       content: `<div class="popover-active form-group" id="${element.querySelector(`span`).id}">
-      <div class="input-group p-1">
-      <span class="input-group-text">Event name</span>  
-      <input  type="text" class="event-name form-control" placeholder="Event name" aria-label="Event name" aria-describedby="event-name">
-      </div>
-      <div class ="input-group p-1 ps-5">
-        <span class="input-group-text" id="start-time">From</span>  
-        <input class="event-start" type="time" aria-label="Start time" aria-describedby="start-time">
-        <span class="input-group-text" id="end-time">To</span>  
-        <input class="event-end" type="time" aria-label="End time" aria-describedby="end-time"> 
-      </div>
-      <div class="input-group p-1">
-      <span class="input-group-text" id="event-descr">Event description</span>  
-      <textarea  type="text" class="event-description form-control" placeholder="Event description" aria-label="Event description" aria-describedby="event-descr"></textarea>
-      </div>
-      <div class="d-md-flex justify-content-md-end">
-      <button class="btn btn-outline-secondary" type="submit" id="confirm-button" onclick="submitEvent()">Create</button>
-      </div>
-      
-      </div>`,
+    <div class="input-group p-1">
+    <span class="input-group-text">Event name</span>  
+    <input  type="text" class="event-name form-control" placeholder="Event name" aria-label="Event name" aria-describedby="event-name">
+    </div>
+    <div class ="input-group p-1 ps-5">
+      <span class="input-group-text" id="start-time">From</span>  
+      <input class="event-start" type="time" aria-label="Start time" aria-describedby="start-time">
+      <span class="input-group-text" id="end-time">To</span>  
+      <input class="event-end" type="time" aria-label="End time" aria-describedby="end-time"> 
+    </div>
+    <div class="input-group p-1">
+    <span class="input-group-text" id="event-descr">Event description</span>  
+    <textarea  type="text" class="event-description form-control" placeholder="Event description" aria-label="Event description" aria-describedby="event-descr"></textarea>
+    </div>
+    <div class="d-md-flex justify-content-md-end">
+    <button class="btn btn-outline-secondary" type="submit" id="confirm-button" onclick="submitEvent()">Create</button>
+    </div>
+    
+    </div>`,
     });
 
     parent.appendChild(popDiv);
+
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
     var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
       return new bootstrap.Popover(popoverTriggerEl);
@@ -274,33 +295,26 @@ const requestDataDB = (currentYear, currentMonth) => {
 
     const mnth = arrayResult.filter(({ month }) => month === currentMonth + 1);
     const evnts = mnth.filter(({ year }) => year === currentYear);
-    const mnthBefore = arrayResult.filter(() => {});
-    const evntsBefore = mnthBefore.filter(({ year }) => year === currentYear);
 
     console.log(mnth);
-    console.log(mnthBefore);
-    console.log(evntsBefore);
-    for (i in evntsBefore) {
-      const { month: elmesantes, day: eldiaantes, name: elnombreantes } = evntsBefore[i];
-      console.log(elmesantes, eldiaantes, elnombreantes);
-      const coge = document.getElementById(`${eldiaantes}-${elmesantes}`);
-      nombreEvento = elnombreantes;
-      createEventEntry(coge);
-    }
+
     for (i in evnts) {
       const { month: elmes, day: eldia, name: elnombre } = evnts[i];
       console.log(elmes, eldia, elnombre);
       const coge = document.getElementById(`${eldia}-${elmes - 1}`);
       nombreEvento = elnombre;
+
       createEventEntry(coge);
+
+      console.log("BUENAS");
     }
   };
 };
 
-(() => {
+const f = () => {
   document.body.appendChild(container);
   addYears();
   addMonths();
   onSelectYear(currentYear);
   onSelectMonth("January", currentMonth);
-})();
+};
